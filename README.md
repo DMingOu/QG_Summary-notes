@@ -1,1 +1,1 @@
-# QG_Summary-notes
+# QG周记总结
