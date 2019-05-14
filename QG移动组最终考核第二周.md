@@ -471,3 +471,33 @@ public void onBindViewHolder(final ItemArticleViewHolder holder, int position) {
 ```
 mRecyclerView.setItemViewCacheSize(500);//设置RecyclerView的缓存数量
 ```
+
+
+
+新的解决方法：
+
+师兄指导，“随机”文章变色其实是ViewHolder发生了复用的问题
+
+ViewHolder复用了之前的布局，所以之前设了灰色的复用回来还是灰色
+
+原先的变色逻辑
+
+if isRead set color = gray
+加一段代码，改成：
+if isRead set color = gray
+else set color = black
+
+```
+if (article.getTitle().equals(title)) {
+    Log.e("Articletitle",article.getTitle());
+    holder.mTitleTv.setTextColor(Color.parseColor("#999999"));
+    break;
+} else { 
+ 	//多了else，让被复用时的布局，但没有被点击可以恢复成黑色
+    holder.mTitleTv.setTextColor(Color.parseColor("#000000"));
+}
+```
+
+```
+mRecyclerView.setItemViewCacheSize(500);//设置RecyclerView的缓存数量, 大了就不复用ViewHolder，直接全部新建，布局建多了卡是迟早的事
+```
