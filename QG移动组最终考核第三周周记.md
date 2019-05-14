@@ -606,3 +606,64 @@ this.registerReceiver(receiver,filter);//注册广播
 <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" /> <!-- 读取网络状态 -->
 ```
 
+问题：要是弱网，断网情况下就进APP，虽然设置后恢复网络可还是要显示出来啊
+
+解决方法：自定义一个Handler类，在广播接收器和主活动搭桥，当网络恢复好后，就通知活动去请求数据，加载文章出来吧。
+
+ HandlerManger.java
+
+```
+public class HandlerManger {
+    public static final String TAG = "Manager";
+
+    private static HandlerManger mInstance;
+
+    public Handler mHandler;
+
+    public synchronized static HandlerManger getInstance() {
+        if (mInstance == null) {
+            mInstance = new HandlerManger();
+        }
+        return mInstance;
+    }
+
+    public void setHandler(Handler handler) {
+        this.mHandler = handler;
+    }
+
+    /**
+     * 利用Handler发送消息
+     */
+    public void sendSuccessMessage() {
+        mHandler.sendEmptyMessage(0x01);
+    }
+
+}
+```
+
+MainActivity.java 
+
+```
+Handler handler = new Handler(){//此函数是属于MainActivity.java所在线程的函数方法，所以可以直接调用MainActivity的 所有方法。
+     public void handleMessage(Message msg) {
+         if (msg.what == 0x01) {
+             if(articleList.size() == 0) {
+                 //第一篇文章都还没加载出来
+                 new ArticleListTask().execute(BaseUrl.getArticleListPath());
+             }
+             System.out.println("收到handler消息");
+         } else {
+             Toast.makeText(MainActivity.this, "请重新输入地址：", Toast.LENGTH_SHORT).show();
+         }
+     }
+ };
+ 
+ //onCreate里
+ HandlerManger.getInstance().setHandler(handler);
+```
+
+广播接收器的onReceive方法的判定网络畅通后，调用
+
+```
+HandlerManger.getInstance().sendSuccessMessage();//发送消息
+```
